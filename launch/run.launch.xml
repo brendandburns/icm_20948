@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
-  <arg name="port" default="/dev/ttyACM0"/>
+  <arg name="port" default="/dev/imu"/>
   <arg name="time_out" default="0.5"/>
   <arg name="baudrate" default="115200"/>
   <arg name="imu_topic" default="imu"/>

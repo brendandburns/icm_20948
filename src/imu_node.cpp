@@ -7,6 +7,7 @@ ImuNode::ImuNode() : rclcpp::Node("imu_node")
   this->declare_parameter<std::string>("imu_topic", "imu");
   this->declare_parameter<float>("time_out", 0.5);
   this->declare_parameter<int>("baudrate", 115200);
+  _publish_hz = this->declare_parameter<double>("publish_hz", 60.0);
   this->get_parameter("port", _port);
   this->get_parameter("frame_id", _frame_id);
   this->get_parameter("imu_topic", _imu_topic);
@@ -17,6 +18,16 @@ ImuNode::ImuNode() : rclcpp::Node("imu_node")
   _angular_velocity_flag = false;
   _quaternion_flag = false;
   openSerial(_port, _baudrate, _time_out);
+
+  auto period = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(1.0/_publish_hz));
+
+  timer_ = this->create_wall_timer(period, [this](){
+    publishMsg(_acceleration, _angular_velocity, _quaternion);
+  });
+
+  read_timer_ = this->create_wall_timer(1ms, [this](){
+    controlLoop();
+  });
 }
 
 void ImuNode::openSerial(const std::string& port, const int& baudrate, const float& time_out)
@@ -115,7 +126,6 @@ void ImuNode::processData(const uint8_t& raw_data)
 
   if (_acceleration_flag && _angular_velocity_flag && _quaternion_flag)
   {
-    publishMsg(_acceleration, _angular_velocity, _quaternion);
     _acceleration_flag = false;
     _angular_velocity_flag = false;
     _quaternion_flag = false;
@@ -199,10 +209,7 @@ int main(int argc, char* argv[])
 {
   rclcpp::init(argc, argv);
   auto node = std::make_shared<ImuNode>();
-  while (rclcpp::ok())
-  {
-    node->controlLoop();
-  }
+  rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;
 }

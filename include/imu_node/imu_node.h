@@ -26,6 +26,9 @@ private:
   bool _quaternion_flag;
   int _baudrate;
   float _time_out;
+  double _publish_hz;
+  rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::TimerBase::SharedPtr read_timer_;
 
   const size_t _BUFFER_SIZE = 11;
   const uint8_t _HEADER_BYTE = 0x55;
